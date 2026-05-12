@@ -1,0 +1,64 @@
+// Task2Analysis.java
+
+/*
+1. What is the exact cause of ConcurrentModificationException in Java?
+
+ConcurrentModificationException occurs when a collection is structurally modified
+(add/remove/update affecting size or internal state) while it is being iterated
+using an Iterator, enhanced for-loop, or stream, without using the iterator’s
+own modification methods.
+
+In ArrayList, the iterator internally checks a modification count (modCount).
+If the collection is modified outside the iterator during iteration,
+the iterator detects the mismatch and throws ConcurrentModificationException.
+
+-----------------------------------------------------------------------
+
+2. What code pattern at line 142 most likely triggered this error?
+
+Most likely pattern:
+
+for (Transaction tx : transactions) {
+    if (shouldRemove(tx)) {
+        transactions.remove(tx);   // Causes ConcurrentModificationException
+    }
+}
+
+OR:
+
+Iterator<Transaction> itr = transactions.iterator();
+
+while (itr.hasNext()) {
+    Transaction tx = itr.next();
+
+    if (shouldRemove(tx)) {
+        transactions.remove(tx);   // Wrong collection modification
+    }
+}
+
+The error stack:
+ArrayList$Itr.checkForComodification()
+strongly indicates removal/modification of the same ArrayList during iteration.
+
+-----------------------------------------------------------------------
+
+3. Provide the minimal code change (one or two lines) that resolves this safely.
+
+Safe fix using Iterator.remove():
+
+Iterator<Transaction> itr = transactions.iterator();
+
+while (itr.hasNext()) {
+    Transaction tx = itr.next();
+
+    if (shouldRemove(tx)) {
+        itr.remove();   // Safe removal during iteration
+    }
+}
+
+Alternative one-line modern fix:
+
+transactions.removeIf(tx -> shouldRemove(tx));
+
+This safely removes elements without triggering ConcurrentModificationException.
+*/
